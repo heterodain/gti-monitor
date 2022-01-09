@@ -1,0 +1,18 @@
+# デバイス設定
+device:
+  gti:
+    com-port: "ttyUSB0"
+    unit-id: 1
+
+# サービス設定
+service:
+  # Ambientのチャネル接続設定
+  ambient:
+    channel-id: 99999
+    read-key: "****************"
+    write-key: "****************"
+
+# 費用設定
+cost:
+  # kWh当たりの電気代(円)
+  kwh: 30
