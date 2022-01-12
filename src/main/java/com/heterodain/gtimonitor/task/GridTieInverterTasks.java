@@ -1,11 +1,13 @@
 package com.heterodain.gtimonitor.task;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -124,8 +126,30 @@ public class GridTieInverterTasks {
             var sendDatas = new Double[] { null, summary, summary * costConfig.getKwh() / 1000D };
             log.debug("Ambientに1時間値を送信します。power={}Wh, yen={}", sendDatas[1], sendDatas[2]);
 
-            ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS),
-                    sendDatas);
+            var lastHour = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS).minusHours(1);
+            ambientService.send(serviceConfig.getAmbient(), lastHour, sendDatas);
+        } catch (Exception e) {
+            log.error("Ambientへのデータ送信に失敗しました。", e);
+        }
+    }
+
+    /**
+     * 1日毎に集計してAmbientにデータ送信
+     */
+    @Scheduled(cron = "10 1 0 * * *")
+    public void sendAmbient3() throws Exception {
+        var yesterday = LocalDate.now().minusDays(1);
+
+        // 1日分のデータを取得して集計
+        var summary = ambientService.read(serviceConfig.getAmbient(), yesterday).stream().filter(d -> d.getD2() != null)
+                .mapToDouble(d -> d.getD2()).sum();
+
+        // Ambient送信
+        try {
+            var sendDatas = new Double[] { null, null, null, summary, summary * costConfig.getKwh() / 1000D };
+            log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[3], sendDatas[4]);
+
+            ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()), sendDatas);
         } catch (Exception e) {
             log.error("Ambientへのデータ送信に失敗しました。", e);
         }
