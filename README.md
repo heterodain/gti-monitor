@@ -7,7 +7,7 @@
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
 ![j2mod](https://img.shields.io/badge/j2mod-2.7.0-green.svg)
 
-<img width="1920" alt="08" src="https://user-images.githubusercontent.com/46586035/148751011-55361419-d0e6-4601-af0f-048b33df5d25.png">
+<img width="1920" alt="image" src="https://user-images.githubusercontent.com/46586035/148751011-55361419-d0e6-4601-af0f-048b33df5d25.png">
 
 ## 必要要件 (Requirement)
 
@@ -39,7 +39,7 @@
 ## 参考情報 (Appendix)
 
 Ambient Channel Setting  
-<img width="911" alt="06" src="https://user-images.githubusercontent.com/46586035/148750923-64086844-7efc-41c6-8718-b86164e9670b.png">
+<img width="907" alt="setting" src="https://user-images.githubusercontent.com/46586035/149070707-5649b966-9334-4ee0-b1a5-a04c66164af5.png">
 
 Ambient Chart  
-<img width="768" alt="07" src="https://user-images.githubusercontent.com/46586035/148750926-eda09306-e2a1-419d-b2a5-e34c27919f13.png">
+<img width="768" alt="chart" src="https://user-images.githubusercontent.com/46586035/148750926-eda09306-e2a1-419d-b2a5-e34c27919f13.png">
