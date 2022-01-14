@@ -64,7 +64,7 @@ public class AmbientService {
         var jsonString = om.writeValueAsString(rootNode);
 
         // HTTP POST
-        var url = "http://54.65.206.59/api/v2/channels/" + info.getChannelId() + "/dataarray";
+        var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/dataarray";
         log.trace("request > " + url);
         log.trace("body > " + jsonString);
 
@@ -93,7 +93,7 @@ public class AmbientService {
      */
     public List<ReadData> read(Ambient info, LocalDate date) throws IOException {
         // HTTP GET
-        var url = "http://54.65.206.59/api/v2/channels/" + info.getChannelId() + "/data?readKey=" + info.getReadKey()
+        var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/data?readKey=" + info.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
         log.trace("request > " + url);
 
