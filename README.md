@@ -9,6 +9,8 @@
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/46586035/148751011-55361419-d0e6-4601-af0f-048b33df5d25.png">
 
+[![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg)
+
 ## 必要要件 (Requirement)
 
 - グリッドタイインバーター (Grid Tie Inverter)
