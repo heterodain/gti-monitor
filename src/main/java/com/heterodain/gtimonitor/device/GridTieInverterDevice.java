@@ -84,6 +84,7 @@ public class GridTieInverterDevice {
 		if (serial != null && serial.isOpen()) {
 			log.info("GTI(port={}, unitId={})を切断します...", serial.getPortName(), unitId);
 			serial.close();
+			serial = null;
 		}
 	}
 }
