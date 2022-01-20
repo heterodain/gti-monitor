@@ -1,6 +1,8 @@
 package com.heterodain.gtimonitor.device;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersRequest;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import com.ghgande.j2mod.modbus.net.SerialConnection;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
+import com.heterodain.gtimonitor.config.DeviceConfig.Gti;
 
 /**
  * グリッドタイインバーターデバイス
@@ -20,71 +23,71 @@ import com.ghgande.j2mod.modbus.util.SerialParameters;
 @Component
 @Slf4j
 public class GridTieInverterDevice {
-	/** シリアルポート名 */
-	private SerialConnection serial;
-	/** ModbusのユニットID */
-	private Integer unitId;
+	/** GTIへのシリアル接続 */
+	private Map<String, SerialConnection> connections = new ConcurrentHashMap<>();
 
 	/**
-	 * 接続
+	 * GTI接続
 	 * 
-	 * @param serialPortName シリアルポート名
-	 * @param unitId         ユニットID
+	 * @param gti GTI情報
 	 * @throws IOException
 	 */
-	public void connect(String serialPortName, Integer unitId) throws IOException {
-		log.info("GTI(port={}, unitId={})に接続します...", serialPortName, unitId);
+	public void connect(Gti info) throws IOException {
+		synchronized (info.getComPort()) {
+			// 接続
+			if (!connections.containsKey(info.getComPort())) {
+				log.info("GTIに接続します: {}", info);
 
-		this.unitId = unitId;
+				var params = new SerialParameters();
+				params.setPortName(info.getComPort());
+				params.setBaudRate(9600);
+				params.setDatabits(8);
+				params.setParity("None");
+				params.setStopbits(1);
+				params.setEncoding("rtu");
+				params.setEcho(false);
 
-		var params = new SerialParameters();
-		params.setPortName(serialPortName);
-		params.setBaudRate(9600);
-		params.setDatabits(8);
-		params.setParity("None");
-		params.setStopbits(1);
-		params.setEncoding("rtu");
-		params.setEcho(false);
-
-		serial = new SerialConnection(params);
-		serial.open();
+				var connection = new SerialConnection(params);
+				connection.open();
+				connections.put(info.getComPort(), connection);
+			}
+		}
 	}
 
 	/**
 	 * 現在の発電電力取得
 	 * 
+	 * @param gti GTI情報
 	 * @return 発電電力(W)
 	 * @throws IOException
 	 * @throws ModbusException
 	 */
-	public Double getCurrentPower() throws IOException, ModbusException {
-		try {
+	public Double getCurrentPower(Gti info) throws IOException, ModbusException {
+		// 接続取得
+		var connection = connections.get(info.getComPort());
+		if (connection == null) {
+			throw new IOException("GTIに接続されていません。" + info);
+		}
+
+		// 読み込み
+		synchronized (connection) {
 			var req = new ReadMultipleRegistersRequest(86, 1);
-			req.setUnitID(unitId);
-			var tr = new ModbusSerialTransaction(serial);
+			req.setUnitID(info.getUnitId());
+			var tr = new ModbusSerialTransaction(connection);
 			tr.setRequest(req);
 			tr.execute();
 
 			var res = (ReadMultipleRegistersResponse) tr.getResponse();
 			return ((double) res.getRegisterValue(0)) / 10D;
-
-		} catch (ModbusException e) {
-			serial.close();
-			serial.open();
-			throw e;
 		}
 	}
 
 	/**
-	 * 切断
-	 * 
-	 * @throws IOException
+	 * GTI接続解除
 	 */
-	public void close() throws IOException {
-		if (serial != null && serial.isOpen()) {
-			log.info("GTI(port={}, unitId={})を切断します...", serial.getPortName(), unitId);
-			serial.close();
-			serial = null;
-		}
+	public void disconnectAll() {
+		connections.values().forEach(connection -> {
+			connection.close();
+		});
 	}
 }

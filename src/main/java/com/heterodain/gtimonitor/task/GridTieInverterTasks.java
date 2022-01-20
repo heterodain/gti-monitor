@@ -30,6 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class GridTieInverterTasks {
+    /** 送受信リトライ回数 */
+    private static final int RETRY_COUNT = 5;
+    /** 送受信リトライ間隔(ミリ秒) */
+    private static final long RETRY_INTERVAL = 5 * 60 * 1000; // 5分
+
     @Autowired
     private DeviceConfig deviceConfig;
     @Autowired
@@ -52,9 +57,8 @@ public class GridTieInverterTasks {
      */
     @PostConstruct
     public void init() throws IOException {
-        // GTI初期化
-        var gtiConfig = deviceConfig.getGti();
-        gtiDevice.connect(gtiConfig.getComPort(), gtiConfig.getUnitId());
+        // GTI接続
+        gtiDevice.connect(deviceConfig.getGti());
     }
 
     /**
@@ -63,7 +67,7 @@ public class GridTieInverterTasks {
     @Scheduled(initialDelay = 3 * 1000, fixedDelay = 30 * 1000)
     public void realtime() {
         try {
-            var current = gtiDevice.getCurrentPower();
+            var current = gtiDevice.getCurrentPower(deviceConfig.getGti());
             log.debug("current={}W", current);
             synchronized (thirtySecDatas) {
                 thirtySecDatas.add(current);
@@ -107,7 +111,7 @@ public class GridTieInverterTasks {
     /**
      * 1時間毎にAmbientにデータ送信
      */
-    @Scheduled(cron = "15 0 * * * *")
+    @Scheduled(cron = "10 0 * * * *")
     public void sendAmbient2() throws Exception {
         if (threeMinDatas.isEmpty()) {
             return;
@@ -123,7 +127,7 @@ public class GridTieInverterTasks {
         // Ambient送信
         var sendDatas = new Double[] { null, summary, summary * costConfig.getKwh() / 1000D };
         var lastHour = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS).minusHours(1);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < RETRY_COUNT; i++) {
             try {
                 log.debug("Ambientに1時間値を送信します。power={}Wh, yen={}", sendDatas[1], sendDatas[2]);
                 ambientService.send(serviceConfig.getAmbient(), lastHour, sendDatas);
@@ -132,25 +136,39 @@ public class GridTieInverterTasks {
                 log.error("Ambientへのデータ送信に失敗しました。", e);
             }
 
-            // 送信失敗したら10分後に再実行
-            Thread.sleep(10 * 60 * 1000);
+            // 送信失敗したら、しばらく待ってから再実行
+            Thread.sleep(RETRY_INTERVAL);
         }
     }
 
     /**
      * 1日毎に集計してAmbientにデータ送信
      */
-    @Scheduled(cron = "30 0 0 * * *")
+    @Scheduled(cron = "0 1 0 * * *")
     public void sendAmbient3() throws Exception {
         var yesterday = LocalDate.now().minusDays(1);
 
         // 1日分のデータを取得して集計
-        var summary = ambientService.read(serviceConfig.getAmbient(), yesterday).stream().filter(d -> d.getD2() != null)
-                .mapToDouble(d -> d.getD2()).sum();
+        Double summary = null;
+        for (int i = 0; i < RETRY_COUNT; i++) {
+            try {
+                summary = ambientService.read(serviceConfig.getAmbient(), yesterday).stream()
+                        .filter(d -> d.getD2() != null)
+                        .mapToDouble(d -> d.getD2()).sum();
+            } catch (Exception e) {
+                log.error("Ambientからのデータ取得に失敗しました。", e);
+            }
+
+            // 送信失敗したら、しばらく待ってから再実行
+            Thread.sleep(RETRY_INTERVAL);
+        }
+        if (summary == null) {
+            throw new IOException("Ambientからのデータ取得に失敗しました。");
+        }
 
         // Ambient送信
         var sendDatas = new Double[] { null, null, null, summary, summary * costConfig.getKwh() / 1000D };
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < RETRY_COUNT; i++) {
             try {
                 log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[3], sendDatas[4]);
                 ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()),
@@ -159,8 +177,8 @@ public class GridTieInverterTasks {
                 log.error("Ambientへのデータ送信に失敗しました。", e);
             }
 
-            // 送信失敗したら10分後に再実行
-            Thread.sleep(10 * 60 * 1000);
+            // 送信失敗したら、しばらく待ってから再実行
+            Thread.sleep(RETRY_INTERVAL);
         }
     }
 
@@ -169,6 +187,7 @@ public class GridTieInverterTasks {
      */
     @PreDestroy
     public void destroy() throws IOException {
-        gtiDevice.close();
+        // GTI接続解除
+        gtiDevice.disconnectAll();
     }
 }

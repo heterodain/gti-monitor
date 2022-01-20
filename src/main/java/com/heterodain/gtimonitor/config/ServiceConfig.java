@@ -3,9 +3,7 @@ package com.heterodain.gtimonitor.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * サービスの設定
@@ -20,8 +18,6 @@ public class ServiceConfig {
     /**
      * Ambientの設定情報
      */
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Data
     public static class Ambient {
         /** チャネルID */

@@ -9,6 +9,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,10 +30,19 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class AmbientService {
+    /** UTCタイムゾーン */
     private static final ZoneId UTC = ZoneId.of("UTC");
+    /** HTTP接続タイムアウト(ミリ秒) */
+    private static final int CONNECT_TIMEOUT = 10 * 1000; // 10秒
+    /** HTTP読み込みタイムアウト(ミリ秒) */
+    private static final int READ_TIMEOUT = 10 * 1000; // 10秒
 
+    /** JSONパーサー */
     @Autowired
     private ObjectMapper om;
+
+    /** チャネルごとの前回送信時刻 */
+    private Map<Integer, Long> lastSendTimes = new ConcurrentHashMap<>();
 
     /**
      * チャネルにデータ送信
@@ -42,44 +53,57 @@ public class AmbientService {
      * @throws IOException
      * @throws InterruptedException
      */
-    public synchronized void send(Ambient info, ZonedDateTime ts, Double... datas)
+    public void send(Ambient info, ZonedDateTime ts, Double... datas)
             throws IOException, InterruptedException {
 
-        // 送信するJSONを構築
-        var rootNode = om.createObjectNode();
-        rootNode.put("writeKey", info.getWriteKey());
-
-        var dataArrayNode = om.createArrayNode();
-        var dataNode = om.createObjectNode();
-        var utcTs = ts.withZoneSameInstant(UTC).toLocalDateTime();
-        dataNode.put("created", utcTs.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        for (int i = 1; i <= datas.length; i++) {
-            if (datas[i - 1] != null) {
-                dataNode.put("d" + i, datas[i - 1]);
+        synchronized (info) {
+            // チャネルへの送信間隔が6秒以上になるように調整 (同一チャネルへの送信は5秒以上間隔を空ける必要がある)
+            var lastSendTime = lastSendTimes.get(info.getChannelId());
+            if (lastSendTime != null) {
+                var diff = System.currentTimeMillis() - lastSendTime;
+                if (diff < 6000) {
+                    Thread.sleep(6000 - diff);
+                }
             }
-        }
-        dataArrayNode.add(dataNode);
-        rootNode.set("data", dataArrayNode);
 
-        var jsonString = om.writeValueAsString(rootNode);
+            // 送信するJSONを構築
+            var rootNode = om.createObjectNode();
+            rootNode.put("writeKey", info.getWriteKey());
 
-        // HTTP POST
-        var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/dataarray";
-        log.trace("request > " + url);
-        log.trace("body > " + jsonString);
+            var dataArrayNode = om.createArrayNode();
+            var dataNode = om.createObjectNode();
+            var utcTs = ts.withZoneSameInstant(UTC).toLocalDateTime();
+            dataNode.put("created", utcTs.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            for (int i = 1; i <= datas.length; i++) {
+                if (datas[i - 1] != null) {
+                    dataNode.put("d" + i, datas[i - 1]);
+                }
+            }
+            dataArrayNode.add(dataNode);
+            rootNode.set("data", dataArrayNode);
 
-        var conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
-        conn.setDoOutput(true);
-        try (var os = conn.getOutputStream()) {
-            os.write(jsonString.getBytes(StandardCharsets.UTF_8));
-        }
-        var resCode = conn.getResponseCode();
-        if (resCode != 200) {
-            throw new IOException("Ambient Response Code " + resCode);
+            var jsonString = om.writeValueAsString(rootNode);
+
+            // HTTP POST
+            var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/dataarray";
+            log.trace("request > " + url);
+            log.trace("body > " + jsonString);
+
+            var conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setConnectTimeout(CONNECT_TIMEOUT);
+            conn.setReadTimeout(READ_TIMEOUT);
+            conn.setDoOutput(true);
+            try (var os = conn.getOutputStream()) {
+                os.write(jsonString.getBytes(StandardCharsets.UTF_8));
+            }
+            var resCode = conn.getResponseCode();
+            if (resCode != 200) {
+                throw new IOException("Ambient Response Code " + resCode);
+            }
+
+            lastSendTimes.put(info.getChannelId(), System.currentTimeMillis());
         }
     }
 
@@ -99,8 +123,8 @@ public class AmbientService {
 
         var conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setRequestMethod("GET");
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
+        conn.setConnectTimeout(CONNECT_TIMEOUT);
+        conn.setReadTimeout(READ_TIMEOUT);
         var resCode = conn.getResponseCode();
         if (resCode != 200) {
             throw new IOException("Ambient Response Code " + resCode);
