@@ -33,9 +33,9 @@ public class AmbientService {
     /** UTCタイムゾーン */
     private static final ZoneId UTC = ZoneId.of("UTC");
     /** HTTP接続タイムアウト(ミリ秒) */
-    private static final int CONNECT_TIMEOUT = 10 * 1000; // 10秒
+    private static final int CONNECT_TIMEOUT = 15 * 1000; // 15秒
     /** HTTP読み込みタイムアウト(ミリ秒) */
-    private static final int READ_TIMEOUT = 10 * 1000; // 10秒
+    private static final int READ_TIMEOUT = 30 * 1000; // 30秒
 
     /** JSONパーサー */
     @Autowired
