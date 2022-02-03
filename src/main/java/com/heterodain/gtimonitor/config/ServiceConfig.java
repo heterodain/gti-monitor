@@ -14,6 +14,8 @@ import lombok.Data;
 public class ServiceConfig {
     /** Ambientの設定 */
     private Ambient ambient;
+    /** OpenWeatherの設定 */
+    private OpenWeather openWeather;
 
     /**
      * Ambientの設定情報
@@ -26,5 +28,13 @@ public class ServiceConfig {
         private String readKey;
         /** ライトキー */
         private String writeKey;
+    }
+
+    @Data
+    public static class OpenWeather {
+        /** 都市ID */
+        private String cityId;
+        /** APIアクセスキー */
+        private String apiKey;
     }
 }

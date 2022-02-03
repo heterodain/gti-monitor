@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +15,7 @@ import com.heterodain.gtimonitor.config.DeviceConfig;
 import com.heterodain.gtimonitor.config.ServiceConfig;
 import com.heterodain.gtimonitor.device.GridTieInverterDevice;
 import com.heterodain.gtimonitor.service.AmbientService;
+import com.heterodain.gtimonitor.service.OpenWeatherService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,11 +46,11 @@ public class GridTieInverterTasks {
     private GridTieInverterDevice gtiDevice;
     @Autowired
     private AmbientService ambientService;
+    @Autowired
+    private OpenWeatherService openWeatherService;
 
     /** 計測データ(30秒値) */
     private List<Double> thirtySecDatas = new ArrayList<>();
-    /** 計測データ(3分値) */
-    private List<Double> threeMinDatas = new ArrayList<>();
 
     /**
      * 初期化処理
@@ -87,57 +87,26 @@ public class GridTieInverterTasks {
             return;
         }
 
+        // 天候取得
+        var weather = openWeatherService.getCurrentWeather(serviceConfig.getOpenWeather());
+
         // 平均値算出
         Double summary;
         synchronized (thirtySecDatas) {
             summary = thirtySecDatas.stream().mapToDouble(d -> d).average().orElse(0D);
             thirtySecDatas.clear();
         }
-        synchronized (threeMinDatas) {
-            threeMinDatas.add(summary);
-        }
 
         // Ambient送信
         try {
-            var sendDatas = new Double[] { summary };
-            log.debug("Ambientに3分値を送信します。current={}W", sendDatas[0]);
+            var sendDatas = new Double[] { summary, weather.getTemperature(), weather.getCloudness().doubleValue(),
+                    weather.getRain1h() };
+            log.debug("Ambientに3分値を送信します。current={}W,temp={}℃,cloud={}%,rain={}mm", sendDatas[0], sendDatas[1],
+                    sendDatas[2], sendDatas[3] != null ? sendDatas[3] : 0);
 
-            ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now(), sendDatas);
+            ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now(), weather.getWeather(), sendDatas);
         } catch (Exception e) {
             log.error("Ambientへのデータ送信に失敗しました。", e);
-        }
-    }
-
-    /**
-     * 1時間毎にAmbientにデータ送信
-     */
-    @Scheduled(cron = "10 0 * * * *")
-    public void sendAmbient2() throws Exception {
-        if (threeMinDatas.isEmpty()) {
-            return;
-        }
-
-        // 平均値算出
-        Double summary;
-        synchronized (threeMinDatas) {
-            summary = threeMinDatas.stream().mapToDouble(d -> d).average().orElse(0D);
-            threeMinDatas.clear();
-        }
-
-        // Ambient送信
-        var sendDatas = new Double[] { null, summary, summary * costConfig.getKwh() / 1000D };
-        var lastHour = ZonedDateTime.now().truncatedTo(ChronoUnit.HOURS).minusHours(1);
-        for (int i = 0; i < RETRY_COUNT; i++) {
-            try {
-                log.debug("Ambientに1時間値を送信します。power={}Wh, yen={}", sendDatas[1], sendDatas[2]);
-                ambientService.send(serviceConfig.getAmbient(), lastHour, sendDatas);
-                break;
-            } catch (Exception e) {
-                log.error("Ambientへのデータ送信に失敗しました。", e);
-            }
-
-            // 送信失敗したら、しばらく待ってから再実行
-            Thread.sleep(RETRY_INTERVAL);
         }
     }
 
@@ -167,11 +136,11 @@ public class GridTieInverterTasks {
         }
 
         // Ambient送信
-        var sendDatas = new Double[] { null, null, null, summary, summary * costConfig.getKwh() / 1000D };
+        var sendDatas = new Double[] { null, null, null, null, summary, summary * costConfig.getKwh() / 1000D };
         for (int i = 0; i < RETRY_COUNT; i++) {
             try {
-                log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[3], sendDatas[4]);
-                ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()),
+                log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[4], sendDatas[5]);
+                ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()), null,
                         sendDatas);
             } catch (Exception e) {
                 log.error("Ambientへのデータ送信に失敗しました。", e);

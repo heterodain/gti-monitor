@@ -1,5 +1,6 @@
 # デバイス設定
 device:
+  # グリッドタイインバーターの接続設定
   gti:
     com-port: "ttyUSB0"
     unit-id: 1
@@ -11,6 +12,12 @@ service:
     channel-id: 99999
     read-key: "****************"
     write-key: "****************"
+  ## Open Weather API接続設定
+  open-weather:
+    # 都市ID
+    city-id: 1848354
+    # APIアクセスキー
+    api-key: "********************************"
 
 # 費用設定
 cost:
