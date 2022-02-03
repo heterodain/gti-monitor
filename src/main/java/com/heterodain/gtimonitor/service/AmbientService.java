@@ -47,18 +47,19 @@ public class AmbientService {
     /**
      * チャネルにデータ送信
      * 
-     * @param info  チャネル情報
-     * @param ts    タイムスタンプ
-     * @param datas 送信データ(最大8個)
+     * @param config  API接続設定
+     * @param ts      タイムスタンプ
+     * @param comment コメント
+     * @param datas   送信データ(最大8個)
      * @throws IOException
      * @throws InterruptedException
      */
-    public void send(Ambient info, ZonedDateTime ts, Double... datas)
+    public void send(Ambient config, ZonedDateTime ts, String comment, Double... datas)
             throws IOException, InterruptedException {
 
-        synchronized (info) {
+        synchronized (config) {
             // チャネルへの送信間隔が6秒以上になるように調整 (同一チャネルへの送信は5秒以上間隔を空ける必要がある)
-            var lastSendTime = lastSendTimes.get(info.getChannelId());
+            var lastSendTime = lastSendTimes.get(config.getChannelId());
             if (lastSendTime != null) {
                 var diff = System.currentTimeMillis() - lastSendTime;
                 if (diff < 6000) {
@@ -68,7 +69,7 @@ public class AmbientService {
 
             // 送信するJSONを構築
             var rootNode = om.createObjectNode();
-            rootNode.put("writeKey", info.getWriteKey());
+            rootNode.put("writeKey", config.getWriteKey());
 
             var dataArrayNode = om.createArrayNode();
             var dataNode = om.createObjectNode();
@@ -79,13 +80,16 @@ public class AmbientService {
                     dataNode.put("d" + i, datas[i - 1]);
                 }
             }
+            if (comment != null) {
+                dataNode.put("cmnt", comment);
+            }
             dataArrayNode.add(dataNode);
             rootNode.set("data", dataArrayNode);
 
             var jsonString = om.writeValueAsString(rootNode);
 
             // HTTP POST
-            var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/dataarray";
+            var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/dataarray";
             log.trace("request > " + url);
             log.trace("body > " + jsonString);
 
@@ -103,21 +107,21 @@ public class AmbientService {
                 throw new IOException("Ambient Response Code " + resCode);
             }
 
-            lastSendTimes.put(info.getChannelId(), System.currentTimeMillis());
+            lastSendTimes.put(config.getChannelId(), System.currentTimeMillis());
         }
     }
 
     /**
      * 1日分のデータ取得
      * 
-     * @param info チャネル情報
-     * @param date 日付
+     * @param config API接続設定
+     * @param date   日付
      * @return 1日分のデータ
      * @throws IOException
      */
-    public List<ReadData> read(Ambient info, LocalDate date) throws IOException {
+    public List<ReadData> read(Ambient config, LocalDate date) throws IOException {
         // HTTP GET
-        var url = "http://ambidata.io/api/v2/channels/" + info.getChannelId() + "/data?readKey=" + info.getReadKey()
+        var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
         log.trace("request > " + url);
 
@@ -148,5 +152,6 @@ public class AmbientService {
         private Double d6;
         private Double d7;
         private Double d8;
+        private String cmnt;
     }
 }
