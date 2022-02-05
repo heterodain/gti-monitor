@@ -2,10 +2,13 @@ package com.heterodain.gtimonitor.task;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -17,6 +20,7 @@ import com.heterodain.gtimonitor.device.GridTieInverterDevice;
 import com.heterodain.gtimonitor.service.AmbientService;
 import com.heterodain.gtimonitor.service.OpenWeatherService;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -108,10 +112,9 @@ public class GridTieInverterTasks {
         // Ambient送信
         try {
             var sendDatas = new Double[] { summary, weather.getTemperature(), weather.getCloudness().doubleValue(),
-                    weather.getRain1h() };
-            log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,rain={}mm", sendDatas[0],
-                    lastWeather, sendDatas[1],
-                    sendDatas[2], sendDatas[3] != null ? sendDatas[3] : 0);
+                    weather.getHumidity().doubleValue(), weather.getPressure().doubleValue() };
+            log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,humidity={}%,pressure={}hPa",
+                    sendDatas[0], lastWeather, sendDatas[1], sendDatas[2], sendDatas[3], sendDatas[4]);
 
             ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now(), weather.getWeather(), sendDatas);
         } catch (Exception e) {
@@ -123,16 +126,20 @@ public class GridTieInverterTasks {
      * 1日毎に集計してAmbientにデータ送信
      */
     @Scheduled(cron = "0 1 0 * * *")
-    public void sendAmbient3() throws Exception {
+    public void sendAmbient2() throws Exception {
         var yesterday = LocalDate.now().minusDays(1);
 
         // 1日分のデータを取得して集計
         Double summary = null;
         for (int i = 0; i < RETRY_COUNT; i++) {
             try {
-                summary = ambientService.read(serviceConfig.getAmbient(), yesterday).stream()
-                        .filter(d -> d.getD2() != null)
-                        .mapToDouble(d -> d.getD2()).sum();
+                // 1時間ごとの電力平均値(Wh)を算出して1日分集計
+                var whs = ambientService.read(serviceConfig.getAmbient(), yesterday).stream()
+                        .filter(d -> d.getD1() != null)
+                        .map(d -> Pair.of(LocalDateTime.parse(d.getCreated()).getHour(), d.getD1()))
+                        .collect(Collectors.groupingBy(Pair::getKey, Collectors.averagingDouble(Pair::getValue)))
+                        .values();
+                summary = whs.stream().mapToDouble(d -> d).sum();
             } catch (Exception e) {
                 log.error("Ambientからのデータ取得に失敗しました。", e);
             }
@@ -145,10 +152,10 @@ public class GridTieInverterTasks {
         }
 
         // Ambient送信
-        var sendDatas = new Double[] { null, null, null, null, summary, summary * costConfig.getKwh() / 1000D };
+        var sendDatas = new Double[] { null, null, null, null, null, summary, summary * costConfig.getKwh() / 1000D };
         for (int i = 0; i < RETRY_COUNT; i++) {
             try {
-                log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[4], sendDatas[5]);
+                log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[5], sendDatas[6]);
                 ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()), null,
                         sendDatas);
             } catch (Exception e) {
