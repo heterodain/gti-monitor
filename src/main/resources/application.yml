@@ -23,3 +23,6 @@ service:
 cost:
   # kWh当たりの電気代(円)
   kwh: 30
+
+# ログレベル
+#詳細なログを出力する場合にコメントを外す# logging.level.com.heterodain.gtimonitor: TRACE

@@ -90,8 +90,8 @@ public class AmbientService {
 
             // HTTP POST
             var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/dataarray";
-            log.trace("request > " + url);
-            log.trace("body > " + jsonString);
+            log.trace("request > [POST] {}", url);
+            log.trace("request body > {}", jsonString);
 
             var conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setRequestMethod("POST");
