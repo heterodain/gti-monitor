@@ -9,12 +9,12 @@
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/46586035/148751011-55361419-d0e6-4601-af0f-048b33df5d25.png">
 
-[![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg)
+[![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
 
 ## 必要要件 (Requirement)
 
 - グリッドタイインバーター (Grid Tie Inverter)
-  - SUN 1000GTIL2
+  - SUN 1000GTIL2-LCD
 - Java 8 以降 (Java 8 or higher)
 
 ## 使い方 (Usage)
@@ -22,8 +22,8 @@
 1. GTIの通信ポートと、PCまたはRaspberry PIを接続してください。  
    (Connect GTI Serial Port to PC or Raspberry PI)
 
-2. application.yml を編集して、GTIとAmbientの接続情報を記入してください。  
-   (Edit application.yml and fills connect information of GTI and Ambient)
+2. application.yml を編集して、GTIとAmbientとOpenWeatherの接続情報を記入してください。  
+   (Edit application.yml and fills connect information of GTI and Ambient, Open Weather)
 
 3. コンパイル&パッケージング (Compile & Packaging)
 
@@ -35,13 +35,13 @@
    (Put jar and application.yml files in same folder, Execute on PC or Raspberry PI)
 
      ```command
-     java -jar gti-monitor-1.0.jar
+     java -jar gti-monitor-1.1.jar
      ```
 
 ## 参考情報 (Appendix)
 
 Ambient Channel Setting  
-<img width="907" alt="setting" src="https://user-images.githubusercontent.com/46586035/149070707-5649b966-9334-4ee0-b1a5-a04c66164af5.png">
+<img width="920" alt="setting" src="https://user-images.githubusercontent.com/46586035/152628414-f6adfae4-fd6a-474c-9f50-0ff5dd9bac44.png">
 
 Ambient Chart  
-<img width="768" alt="chart" src="https://user-images.githubusercontent.com/46586035/148750926-eda09306-e2a1-419d-b2a5-e34c27919f13.png">
+<img width="788" alt="chart" src="https://user-images.githubusercontent.com/46586035/152628424-143dd649-522f-46bf-94e6-1a1fc6e05b41.png">
