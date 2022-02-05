@@ -51,6 +51,8 @@ public class GridTieInverterTasks {
 
     /** 計測データ(30秒値) */
     private List<Double> thirtySecDatas = new ArrayList<>();
+    /** 前回の天候 */
+    private String lastWeather;
 
     /**
      * 初期化処理
@@ -89,6 +91,12 @@ public class GridTieInverterTasks {
 
         // 天候取得
         var weather = openWeatherService.getCurrentWeather(serviceConfig.getOpenWeather());
+        if (weather.getWeather().equals(lastWeather)) {
+            // 前回の天候と同じ場合は、Ambientにコメントを送信しない
+            weather.setWeather(null);
+        } else {
+            lastWeather = weather.getWeather();
+        }
 
         // 平均値算出
         Double summary;
@@ -101,7 +109,8 @@ public class GridTieInverterTasks {
         try {
             var sendDatas = new Double[] { summary, weather.getTemperature(), weather.getCloudness().doubleValue(),
                     weather.getRain1h() };
-            log.debug("Ambientに3分値を送信します。current={}W,temp={}℃,cloud={}%,rain={}mm", sendDatas[0], sendDatas[1],
+            log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,rain={}mm", sendDatas[0],
+                    lastWeather, sendDatas[1],
                     sendDatas[2], sendDatas[3] != null ? sendDatas[3] : 0);
 
             ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now(), weather.getWeather(), sendDatas);
