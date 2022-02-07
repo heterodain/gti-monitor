@@ -1,14 +1,13 @@
 package com.heterodain.gtimonitor.task;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -136,7 +135,8 @@ public class GridTieInverterTasks {
                 // 1時間ごとの電力平均値(Wh)を算出して1日分集計
                 var whs = ambientService.read(serviceConfig.getAmbient(), yesterday).stream()
                         .filter(d -> d.getD1() != null)
-                        .map(d -> Pair.of(LocalDateTime.parse(d.getCreated()).getHour(), d.getD1()))
+                        .map(d -> Pair.of(Instant.parse(d.getCreated()).atZone(ZoneId.systemDefault()).getHour(),
+                                d.getD1()))
                         .collect(Collectors.groupingBy(Pair::getKey, Collectors.averagingDouble(Pair::getValue)))
                         .values();
                 summary = whs.stream().mapToDouble(d -> d).sum();
