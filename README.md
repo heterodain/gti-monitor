@@ -41,7 +41,7 @@
 ## 参考情報 (Appendix)
 
 Ambient Channel Setting  
-<img width="920" alt="setting" src="https://user-images.githubusercontent.com/46586035/152628414-f6adfae4-fd6a-474c-9f50-0ff5dd9bac44.png">
+<img width="902" alt="setting" src="https://user-images.githubusercontent.com/46586035/153027010-a3815c3a-8857-49cd-b237-47ab3c4a214f.png">
 
 Ambient Chart  
-<img width="788" alt="chart" src="https://user-images.githubusercontent.com/46586035/152628424-143dd649-522f-46bf-94e6-1a1fc6e05b41.png">
+<img width="693" alt="chart" src="https://user-images.githubusercontent.com/46586035/153027021-9efdf837-3679-4f77-803d-b0a60d8ff2cf.png">
