@@ -140,6 +140,7 @@ public class GridTieInverterTasks {
                         .collect(Collectors.groupingBy(Pair::getKey, Collectors.averagingDouble(Pair::getValue)))
                         .values();
                 summary = whs.stream().mapToDouble(d -> d).sum();
+                break;
             } catch (Exception e) {
                 log.error("Ambientからのデータ取得に失敗しました。", e);
             }
@@ -158,6 +159,7 @@ public class GridTieInverterTasks {
                 log.debug("Ambientに1日値を送信します。power={}Wh, yen={}", sendDatas[5], sendDatas[6]);
                 ambientService.send(serviceConfig.getAmbient(), yesterday.atStartOfDay(ZoneId.systemDefault()), null,
                         sendDatas);
+                break;
             } catch (Exception e) {
                 log.error("Ambientへのデータ送信に失敗しました。", e);
             }
