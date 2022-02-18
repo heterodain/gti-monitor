@@ -1,13 +1,13 @@
 # デバイス設定
 device:
-  # グリッドタイインバーターの接続設定
+  ## グリッドタイインバーターの接続設定
   gti:
     com-port: "ttyUSB0"
     unit-id: 1
 
 # サービス設定
 service:
-  # Ambientのチャネル接続設定
+  ## Ambientのチャネル接続設定
   ambient:
     channel-id: 99999
     read-key: "****************"
@@ -26,12 +26,12 @@ service:
 
 # 費用設定
 cost:
-  # kWh当たりの電気代(円)
+  ## kWh当たりの電気代(円)
   kwh: 30
 
 # 制御設定
 control:
-  # 電力制御
+  ## 電力制御
   power:
     # Power Limit切り替え閾値(W)
     threshold: 110

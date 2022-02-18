@@ -1,6 +1,5 @@
 package com.heterodain.gtimonitor.config;
 
-import java.beans.BeanProperty;
 import java.net.http.HttpClient;
 import java.time.Duration;
 

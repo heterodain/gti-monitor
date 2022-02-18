@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,7 +55,7 @@ public class HiveService {
     public OcProfile changeWorkerOcProfile(HiveApi config, String ocProfileName)
             throws IOException, InterruptedException {
         var ocProfiles = getOcProfiles(config);
-        log.debug("OC Profiles > ", ocProfiles);
+        log.debug("OC Profiles > {}", ocProfiles);
 
         var ocProfile = ocProfiles.get(ocProfileName);
         if (ocProfile == null) {
@@ -69,7 +70,10 @@ public class HiveService {
         var payload = om.writeValueAsString(rootNode);
 
         // HTTP PATCH
-        var uri = String.format(SET_WORKER_OC_URL, config.getFarmId(), config.getWorkergId());
+        var uri = String.format(SET_WORKER_OC_URL, config.getFarmId(), config.getWorkerId());
+        log.trace("request > [POST] {}", uri);
+        log.trace("payload > {}", payload);
+
         var request = HttpRequest.newBuilder().method("PATCH", HttpRequest.BodyPublishers.ofString(payload))
                 .uri(URI.create(uri)).header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + config.getPersonalToken())
@@ -93,6 +97,8 @@ public class HiveService {
     private Map<String, OcProfile> getOcProfiles(HiveApi config) throws IOException, InterruptedException {
         // HTTP GET
         var uri = String.format(GET_OC_PROFILE_URL, config.getFarmId());
+        log.trace("request > [GET] {}", uri);
+
         var request = HttpRequest.newBuilder().GET().uri(URI.create(uri))
                 .header("Authorization", "Bearer " + config.getPersonalToken())
                 .timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
@@ -117,6 +123,7 @@ public class HiveService {
      */
     @AllArgsConstructor
     @Getter
+    @ToString
     public static class OcProfile {
         /** プロファイルID */
         private Integer id;

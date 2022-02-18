@@ -48,7 +48,7 @@ public class ServiceConfig {
         /** ファームID */
         private Integer farmId;
         /** ワーカーID */
-        private Integer workergId;
+        private Integer workerId;
         /** パーソナルAPIトークン */
         private String personalToken;
     }
