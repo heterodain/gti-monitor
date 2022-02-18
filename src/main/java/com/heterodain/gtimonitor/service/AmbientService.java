@@ -1,9 +1,11 @@
 package com.heterodain.gtimonitor.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -95,9 +97,12 @@ public class AmbientService {
             log.trace("request > [POST] {}", uri);
             log.trace("payload > {}", payload);
 
-            var request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(payload))
+            var request = HttpRequest.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
+                    .uri(URI.create(uri))
                     .header("Content-Type", "application/json").timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
-            var response = httpClient.send(request, BodyHandlers.ofInputStream());
+            var response = httpClient.send(request, BodyHandlers.discarding());
             if (response.statusCode() != 200) {
                 throw new IOException("Ambient Response Code " + response.statusCode());
             }
@@ -117,11 +122,12 @@ public class AmbientService {
      */
     public List<ReadData> read(Ambient config, LocalDate date) throws IOException, InterruptedException {
         // HTTP GET
-        var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
+        var uri = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
-        log.trace("request > [GET] {}", url);
+        log.trace("request > [GET] {}", uri);
 
-        var request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
+        var request = HttpRequest.newBuilder().GET().uri(URI.create(uri)).timeout(Duration.ofSeconds(READ_TIMEOUT))
+                .build();
         var response = httpClient.send(request, BodyHandlers.ofInputStream());
         if (response.statusCode() != 200) {
             throw new IOException("Ambient Response Code " + response.statusCode());
