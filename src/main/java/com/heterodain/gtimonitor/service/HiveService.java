@@ -78,10 +78,12 @@ public class HiveService {
                 .uri(URI.create(uri)).header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + config.getPersonalToken())
                 .timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
-        var response = httpClient.send(request, BodyHandlers.ofInputStream());
+        var response = httpClient.send(request, BodyHandlers.ofString());
         if (response.statusCode() != 200) {
             throw new IOException("Hive API Response Code " + response.statusCode());
         }
+
+        log.trace("response > {}", response.body());
 
         return ocProfile;
     }
@@ -111,6 +113,7 @@ public class HiveService {
         try (var is = response.body()) {
             json = om.readTree(is);
         }
+        log.trace("response > {}", json);
 
         // レスポンスのJSONから、OCプロファイル情報を抽出
         return StreamSupport.stream(json.get("data").spliterator(), false)
