@@ -37,3 +37,6 @@ control:
     threshold: 110
     # 調整感度(W) ※値を大きくするほど細かな発電量の変化に影響されにくくなる(15くらいが目安)
     hysteresis: 15
+
+# ログレベル
+#詳細なログを出力する場合にコメントを外す# logging.level.com.heterodain.gtimonitor: TRACE

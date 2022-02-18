@@ -1,13 +1,9 @@
 package com.heterodain.gtimonitor.service;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -96,8 +92,8 @@ public class AmbientService {
 
             // HTTP POST
             var uri = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/dataarray";
-            log.trace("request > " + uri);
-            log.trace("payload > " + payload);
+            log.trace("request > [POST] {}", uri);
+            log.trace("payload > {}", payload);
 
             var request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(payload))
                     .header("Content-Type", "application/json").timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
@@ -123,7 +119,7 @@ public class AmbientService {
         // HTTP GET
         var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
-        log.trace("request > " + url);
+        log.trace("request > [GET] {}", url);
 
         var request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
         var response = httpClient.send(request, BodyHandlers.ofInputStream());

@@ -40,7 +40,7 @@ public class OpenWeatherService {
      */
     public CurrentWeather getCurrentWeather(OpenWeatherApi config) throws IOException {
         var url = String.format(CURRENT_WEATHER_API_URL, config.getCityId(), config.getApiKey());
-        log.debug("request > {}", url);
+        log.trace("request > [GET] {}", url);
 
         // HTTP GET
         var conn = (HttpURLConnection) new URL(url).openConnection();
@@ -58,6 +58,8 @@ public class OpenWeatherService {
         try (var is = conn.getInputStream()) {
             json = om.readTree(is);
         }
+
+        log.trace("response > {}", json);
 
         var result = new CurrentWeather();
         result.setWeather(json.at("/weather/0/description").textValue());
