@@ -10,18 +10,20 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import com.heterodain.gtimonitor.config.ControlConfig;
 import com.heterodain.gtimonitor.config.CostConfig;
 import com.heterodain.gtimonitor.config.DeviceConfig;
 import com.heterodain.gtimonitor.config.ServiceConfig;
 import com.heterodain.gtimonitor.device.GridTieInverterDevice;
 import com.heterodain.gtimonitor.service.AmbientService;
+import com.heterodain.gtimonitor.service.HiveService;
 import com.heterodain.gtimonitor.service.OpenWeatherService;
+import com.heterodain.gtimonitor.service.HiveService.OcProfile;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,6 +43,8 @@ public class GridTieInverterTasks {
     private ServiceConfig serviceConfig;
     @Autowired
     private CostConfig costConfig;
+    @Autowired
+    private ControlConfig controlConfig;
 
     @Autowired
     private GridTieInverterDevice gtiDevice;
@@ -48,9 +52,15 @@ public class GridTieInverterTasks {
     private AmbientService ambientService;
     @Autowired
     private OpenWeatherService openWeatherService;
+    @Autowired
+    private HiveService hiveService;
 
     /** 計測データ(30秒値) */
     private List<Double> thirtySecDatas = new ArrayList<>();
+    /** 計測データ(3分値) */
+    private List<Double> threeMinDatas = new ArrayList<>();
+    /** 現在のOCプロファイル */
+    private OcProfile currentOcProfile;
 
     /**
      * 初期化処理
@@ -88,18 +98,21 @@ public class GridTieInverterTasks {
         }
 
         // 天候取得
-        var weather = openWeatherService.getCurrentWeather(serviceConfig.getOpenWeather());
+        var weather = openWeatherService.getCurrentWeather(serviceConfig.getOpenWeatherApi());
 
         // 平均値算出
-        Double summary;
+        Double average;
         synchronized (thirtySecDatas) {
-            summary = thirtySecDatas.stream().mapToDouble(d -> d).average().orElse(0D);
+            average = thirtySecDatas.stream().mapToDouble(d -> d).average().orElse(0D);
             thirtySecDatas.clear();
+        }
+        synchronized (threeMinDatas) {
+            threeMinDatas.add(average);
         }
 
         // Ambient送信
         try {
-            var sendDatas = new Double[] { summary, weather.getTemperature(), weather.getCloudness().doubleValue(),
+            var sendDatas = new Double[] { average, weather.getTemperature(), weather.getCloudness().doubleValue(),
                     weather.getRain1h() };
             log.debug("Ambientに3分値を送信します。current={}W,temp={}℃,cloud={}%,rain={}mm", sendDatas[0], sendDatas[1],
                     sendDatas[2], sendDatas[3] != null ? sendDatas[3] : 0);
@@ -111,10 +124,40 @@ public class GridTieInverterTasks {
     }
 
     /**
+     * 15分毎に電力制御
+     */
+    @Scheduled(cron = "10 */15 * * * *")
+    public void controlPower() throws Exception {
+        if (threeMinDatas.isEmpty()) {
+            return;
+        }
+
+        // 平均値算出
+        Double average;
+        synchronized (threeMinDatas) {
+            average = threeMinDatas.stream().mapToDouble(d -> d).average().orElse(0D);
+            threeMinDatas.clear();
+        }
+
+        if (average - controlConfig.getPower().getThreshold() > controlConfig.getPower().getHysteresis()) {
+            // 発電電力 > 閾値 の場合、Power Limitを上げる
+            if (currentOcProfile == null || "LOW".equals(currentOcProfile.getName())) {
+                currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "HIGH");
+            }
+
+        } else if (average - controlConfig.getPower().getThreshold() < controlConfig.getPower().getHysteresis()) {
+            // 発電電力 < 閾値 の場合、Power Limitを下げる
+            if (currentOcProfile == null || "HIGH".equals(currentOcProfile.getName())) {
+                currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "LOW");
+            }
+        }
+    }
+
+    /**
      * 1日毎に集計してAmbientにデータ送信
      */
     @Scheduled(cron = "0 1 0 * * *")
-    public void sendAmbient3() throws Exception {
+    public void sendAmbient2() throws Exception {
         var yesterday = LocalDate.now().minusDays(1);
 
         // 1日分のデータを取得して集計

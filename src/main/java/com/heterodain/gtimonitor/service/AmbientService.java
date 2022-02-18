@@ -2,8 +2,13 @@ package com.heterodain.gtimonitor.service;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -21,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.Data;
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -32,10 +36,12 @@ import lombok.extern.slf4j.Slf4j;
 public class AmbientService {
     /** UTCタイムゾーン */
     private static final ZoneId UTC = ZoneId.of("UTC");
-    /** HTTP接続タイムアウト(ミリ秒) */
-    private static final int CONNECT_TIMEOUT = 15 * 1000; // 15秒
-    /** HTTP読み込みタイムアウト(ミリ秒) */
-    private static final int READ_TIMEOUT = 30 * 1000; // 30秒
+    /** HTTP読み込みタイムアウト(秒) */
+    private static final int READ_TIMEOUT = 30;
+
+    /** Httpクライアント */
+    @Autowired
+    private HttpClient httpClient;
 
     /** JSONパーサー */
     @Autowired
@@ -86,25 +92,18 @@ public class AmbientService {
             dataArrayNode.add(dataNode);
             rootNode.set("data", dataArrayNode);
 
-            var jsonString = om.writeValueAsString(rootNode);
+            var payload = om.writeValueAsString(rootNode);
 
             // HTTP POST
-            var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/dataarray";
-            log.trace("request > " + url);
-            log.trace("body > " + jsonString);
+            var uri = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/dataarray";
+            log.trace("request > " + uri);
+            log.trace("payload > " + payload);
 
-            var conn = (HttpURLConnection) new URL(url).openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setConnectTimeout(CONNECT_TIMEOUT);
-            conn.setReadTimeout(READ_TIMEOUT);
-            conn.setDoOutput(true);
-            try (var os = conn.getOutputStream()) {
-                os.write(jsonString.getBytes(StandardCharsets.UTF_8));
-            }
-            var resCode = conn.getResponseCode();
-            if (resCode != 200) {
-                throw new IOException("Ambient Response Code " + resCode);
+            var request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(payload))
+                    .header("Content-Type", "application/json").timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
+            var response = httpClient.send(request, BodyHandlers.ofInputStream());
+            if (response.statusCode() != 200) {
+                throw new IOException("Ambient Response Code " + response.statusCode());
             }
 
             lastSendTimes.put(config.getChannelId(), System.currentTimeMillis());
@@ -118,23 +117,21 @@ public class AmbientService {
      * @param date   日付
      * @return 1日分のデータ
      * @throws IOException
+     * @throws InterruptedException
      */
-    public List<ReadData> read(Ambient config, LocalDate date) throws IOException {
+    public List<ReadData> read(Ambient config, LocalDate date) throws IOException, InterruptedException {
         // HTTP GET
         var url = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
         log.trace("request > " + url);
 
-        var conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setRequestMethod("GET");
-        conn.setConnectTimeout(CONNECT_TIMEOUT);
-        conn.setReadTimeout(READ_TIMEOUT);
-        var resCode = conn.getResponseCode();
-        if (resCode != 200) {
-            throw new IOException("Ambient Response Code " + resCode);
+        var request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
+        var response = httpClient.send(request, BodyHandlers.ofInputStream());
+        if (response.statusCode() != 200) {
+            throw new IOException("Ambient Response Code " + response.statusCode());
         }
 
-        try (var is = conn.getInputStream()) {
+        try (var is = response.body()) {
             return om.readValue(is, new TypeReference<List<ReadData>>() {
             });
         }

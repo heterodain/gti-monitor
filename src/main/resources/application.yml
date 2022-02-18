@@ -13,13 +13,27 @@ service:
     read-key: "****************"
     write-key: "****************"
   ## Open Weather API接続設定
-  open-weather:
+  open-weather-api:
     # 都市ID
     city-id: 1848354
     # APIアクセスキー
     api-key: "********************************"
+  ## Hive API接続設定
+  hive-api:
+    farm-id: 9999999
+    worker-id: 99999999
+    personal-token: "*****************************************************************************************"
 
 # 費用設定
 cost:
   # kWh当たりの電気代(円)
   kwh: 30
+
+# 制御設定
+control:
+  # 電力制御
+  power:
+    # Power Limit切り替え閾値(W)
+    threshold: 110
+    # 調整感度(W) ※値を大きくするほど細かな発電量の変化に影響されにくくなる(15くらいが目安)
+    hysteresis: 15

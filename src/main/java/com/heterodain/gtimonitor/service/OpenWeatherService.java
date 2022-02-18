@@ -6,13 +6,12 @@ import java.net.URL;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.heterodain.gtimonitor.config.ServiceConfig.OpenWeather;
+import com.heterodain.gtimonitor.config.ServiceConfig.OpenWeatherApi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.Data;
-import lombok.var;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -39,7 +38,7 @@ public class OpenWeatherService {
      * @return 現在の天気
      * @throws IOException
      */
-    public CurrentWeather getCurrentWeather(OpenWeather config) throws IOException {
+    public CurrentWeather getCurrentWeather(OpenWeatherApi config) throws IOException {
         var url = String.format(CURRENT_WEATHER_API_URL, config.getCityId(), config.getApiKey());
         log.debug("request > {}", url);
 
@@ -52,7 +51,7 @@ public class OpenWeatherService {
 
         var resCode = conn.getResponseCode();
         if (resCode != 200) {
-            throw new IOException("OpenWeatherMap Response Code " + resCode);
+            throw new IOException("OpenWeather API Response Code " + resCode);
         }
 
         JsonNode json;
