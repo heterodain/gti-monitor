@@ -126,7 +126,8 @@ public class AmbientService {
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
         log.trace("request > [GET] {}", uri);
 
-        var request = HttpRequest.newBuilder().GET().uri(URI.create(uri)).timeout(Duration.ofSeconds(READ_TIMEOUT))
+        var request = HttpRequest.newBuilder().GET().version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create(uri)).timeout(Duration.ofSeconds(READ_TIMEOUT))
                 .build();
         var response = httpClient.send(request, BodyHandlers.ofInputStream());
         if (response.statusCode() != 200) {
