@@ -122,7 +122,7 @@ public class GridTieInverterTasks {
         }
 
         // 現在のOCプロファイルをAmbientの状態色に変換(HIGH=赤,LOW=緑)
-        var oc = currentOcProfile == null ? null : currentOcProfile.getName() == "HIGH" ? 9D : 12D;
+        var oc = currentOcProfile == null ? null : "HIGH".equals(currentOcProfile.getName()) ? 9D : 12D;
 
         // Ambient送信
         try {
