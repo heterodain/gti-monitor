@@ -1,8 +1,11 @@
 package com.heterodain.gtimonitor.service;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,10 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 public class OpenWeatherService {
     /** 天気情報APIのURL */
     private static final String CURRENT_WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather?id=%s&mode=json&lang=ja&units=metric&appid=%s";
-    /** HTTP接続タイムアウト(ミリ秒) */
-    private static final int CONNECT_TIMEOUT = 10 * 1000; // 10秒
     /** HTTP読み込みタイムアウト(ミリ秒) */
     private static final int READ_TIMEOUT = 10 * 1000; // 10秒
+
+    /** Httpクライアント */
+    @Autowired
+    private HttpClient httpClient;
 
     /** JSONパーサー */
     @Autowired
@@ -38,27 +43,23 @@ public class OpenWeatherService {
      * @return 現在の天気
      * @throws IOException
      */
-    public CurrentWeather getCurrentWeather(OpenWeatherApi config) throws IOException {
-        var url = String.format(CURRENT_WEATHER_API_URL, config.getCityId(), config.getApiKey());
-        log.trace("request > [GET] {}", url);
+    public CurrentWeather getCurrentWeather(OpenWeatherApi config) throws IOException, InterruptedException {
+        var uri = String.format(CURRENT_WEATHER_API_URL, config.getCityId(), config.getApiKey());
+        log.trace("request > [GET] {}", uri);
 
         // HTTP GET
-        var conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setRequestMethod("GET");
-        conn.setConnectTimeout(CONNECT_TIMEOUT);
-        conn.setReadTimeout(READ_TIMEOUT);
-        conn.setDoInput(true);
-
-        var resCode = conn.getResponseCode();
-        if (resCode != 200) {
-            throw new IOException("OpenWeather API Response Code " + resCode);
+        var request = HttpRequest.newBuilder().GET()
+                .uri(URI.create(uri))
+                .timeout(Duration.ofSeconds(READ_TIMEOUT)).build();
+        var response = httpClient.send(request, BodyHandlers.ofInputStream());
+        if (response.statusCode() != 200) {
+            throw new IOException("OpenWeather API Response Code " + response.statusCode());
         }
 
         JsonNode json;
-        try (var is = conn.getInputStream()) {
+        try (var is = response.body()) {
             json = om.readTree(is);
         }
-
         log.trace("response > {}", json);
 
         var result = new CurrentWeather();
