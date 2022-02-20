@@ -121,12 +121,15 @@ public class GridTieInverterTasks {
             threeMinDatas.add(average);
         }
 
+        // 現在のOCプロファイルをAmbientの状態色に変換(HIGH=赤,LOW=緑)
+        var oc = currentOcProfile == null ? null : currentOcProfile.getName() == "HIGH" ? 9D : 12D;
+
         // Ambient送信
         try {
             var sendDatas = new Double[] { average, weather.getTemperature(), weather.getCloudness().doubleValue(),
-                    weather.getHumidity().doubleValue(), weather.getPressure().doubleValue() };
-            log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,humidity={}%,pressure={}hPa",
-                    sendDatas[0], lastWeather, sendDatas[1], sendDatas[2], sendDatas[3], sendDatas[4]);
+                    weather.getHumidity().doubleValue(), weather.getPressure().doubleValue(), null, null, oc };
+            log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,humidity={}%,pressure={}hPa,oc={}",
+                    sendDatas[0], lastWeather, sendDatas[1], sendDatas[2], sendDatas[3], sendDatas[4], sendDatas[7]);
 
             ambientService.send(serviceConfig.getAmbient(), ZonedDateTime.now(), weather.getWeather(), sendDatas);
         } catch (Exception e) {
@@ -153,12 +156,14 @@ public class GridTieInverterTasks {
         if (average - controlConfig.getPower().getThreshold() > controlConfig.getPower().getHysteresis()) {
             // 発電電力 > 閾値 の場合、Power Limitを上げる
             if (currentOcProfile == null || "LOW".equals(currentOcProfile.getName())) {
+                log.debug("OCプロファイルをHIGHに変更します。");
                 currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "HIGH");
             }
 
         } else if (average - controlConfig.getPower().getThreshold() < controlConfig.getPower().getHysteresis()) {
             // 発電電力 < 閾値 の場合、Power Limitを下げる
             if (currentOcProfile == null || "HIGH".equals(currentOcProfile.getName())) {
+                log.debug("OCプロファイルをLOWに変更します。");
                 currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "LOW");
             }
         }
