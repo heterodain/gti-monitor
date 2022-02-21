@@ -153,14 +153,16 @@ public class GridTieInverterTasks {
             threeMinDatas.clear();
         }
 
-        if (average - controlConfig.getPower().getThreshold() > controlConfig.getPower().getHysteresis()) {
+        var threshold = controlConfig.getPower().getThreshold();
+        var hysteresis = controlConfig.getPower().getHysteresis();
+        if (average > (threshold + hysteresis)) {
             // 発電電力 > 閾値 の場合、Power Limitを上げる
             if (currentOcProfile == null || "LOW".equals(currentOcProfile.getName())) {
                 log.debug("OCプロファイルをHIGHに変更します。");
                 currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "HIGH");
             }
 
-        } else if (average - controlConfig.getPower().getThreshold() < controlConfig.getPower().getHysteresis()) {
+        } else if (average < (threshold - hysteresis)) {
             // 発電電力 < 閾値 の場合、Power Limitを下げる
             if (currentOcProfile == null || "HIGH".equals(currentOcProfile.getName())) {
                 log.debug("OCプロファイルをLOWに変更します。");
