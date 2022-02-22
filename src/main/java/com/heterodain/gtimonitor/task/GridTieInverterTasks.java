@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -121,13 +122,15 @@ public class GridTieInverterTasks {
             threeMinDatas.add(average);
         }
 
-        // 現在のOCプロファイルをAmbientの状態色に変換(HIGH=赤,LOW=緑)
-        var oc = currentOcProfile == null ? null : "HIGH".equals(currentOcProfile.getName()) ? 9D : 12D;
+        // 現在のOCプロファイルをAmbientの状態色に変換(HIGH=赤[9],LOW=緑[12])
+        var highProfileName = controlConfig.getPower().getHighProfileName();
+        Double ocState = Optional.ofNullable(currentOcProfile).map(p -> p.getName().equals(highProfileName) ? 9D : 12D)
+                .orElse(null);
 
         // Ambient送信
         try {
             var sendDatas = new Double[] { average, weather.getTemperature(), weather.getCloudness().doubleValue(),
-                    weather.getHumidity().doubleValue(), weather.getPressure().doubleValue(), null, null, oc };
+                    weather.getHumidity().doubleValue(), weather.getPressure().doubleValue(), null, null, ocState };
             log.debug("Ambientに3分値を送信します。current={}W,weather={},temp={}℃,cloud={}%,humidity={}%,pressure={}hPa,oc={}",
                     sendDatas[0], lastWeather, sendDatas[1], sendDatas[2], sendDatas[3], sendDatas[4], sendDatas[7]);
 
@@ -153,21 +156,25 @@ public class GridTieInverterTasks {
             threeMinDatas.clear();
         }
 
+        var currentProfileName = currentOcProfile == null ? null : currentOcProfile.getName();
+        var highProfileName = controlConfig.getPower().getHighProfileName();
+        var lowProfileName = controlConfig.getPower().getLowProfileName();
         var threshold = controlConfig.getPower().getThreshold();
         var hysteresis = controlConfig.getPower().getHysteresis();
-        if (average > (threshold + hysteresis)) {
-            // 発電電力 > 閾値 の場合、Power Limitを上げる
-            if (currentOcProfile == null || "LOW".equals(currentOcProfile.getName())) {
-                log.debug("OCプロファイルをHIGHに変更します。");
-                currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "HIGH");
-            }
 
-        } else if (average < (threshold - hysteresis)) {
+        // 発電電力 > 閾値 の場合、Power Limitを上げる
+        if (average > (threshold + hysteresis)
+                && (currentProfileName == null || !currentProfileName.equals(highProfileName))) {
+            log.debug("OCプロファイルを{}に変更します。", highProfileName);
+            currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), highProfileName);
+
             // 発電電力 < 閾値 の場合、Power Limitを下げる
-            if (currentOcProfile == null || "HIGH".equals(currentOcProfile.getName())) {
-                log.debug("OCプロファイルをLOWに変更します。");
-                currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), "LOW");
-            }
+        } else if (average < (threshold - hysteresis)
+                && (currentProfileName == null || !currentProfileName.equals(lowProfileName))) {
+            log.debug("OCプロファイルを{}に変更します。", lowProfileName);
+            currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), lowProfileName);
+        } else {
+            log.trace("OCプロファイルの変更はありません。: {}", currentProfileName);
         }
     }
 

@@ -12,7 +12,7 @@ import lombok.Data;
 @ConfigurationProperties("control")
 @Data
 public class ControlConfig {
-    /** 電力 */
+    /** 電力制御の設置絵 */
     private Power power;
 
     /**
@@ -20,6 +20,10 @@ public class ControlConfig {
      */
     @Data
     public static class Power {
+        /** 高電力設定プロファイル名 */
+        private String highProfileName;
+        /** 低電力設定プロファイル名 */
+        private String lowProfileName;
         /** Power Limit切り替え閾値(W) */
         private Integer threshold;
         /** 調整感度(W) */
