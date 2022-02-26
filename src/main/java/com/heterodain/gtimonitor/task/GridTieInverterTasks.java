@@ -38,8 +38,10 @@ import lombok.extern.slf4j.Slf4j;
 public class GridTieInverterTasks {
     /** 送受信リトライ回数 */
     private static final int RETRY_COUNT = 5;
-    /** 送受信リトライ間隔(ミリ秒) */
-    private static final long RETRY_INTERVAL = 5 * 60 * 1000; // 5分
+    /** Ambient送受信リトライ間隔(ミリ秒) */
+    private static final long AMBIENT_RETRY_INTERVAL = 5 * 60 * 1000; // 5分
+    /** Hive更新リトライ間隔(ミリ秒) */
+    private static final long HIVE_RETRY_INTERVAL = 1 * 60 * 1000; // 1分
 
     @Autowired
     private DeviceConfig deviceConfig;
@@ -162,19 +164,29 @@ public class GridTieInverterTasks {
         var threshold = controlConfig.getPower().getThreshold();
         var hysteresis = controlConfig.getPower().getHysteresis();
 
-        // 発電電力 > 閾値 の場合、Power Limitを上げる
-        if (average > (threshold + hysteresis)
-                && (currentProfileName == null || !currentProfileName.equals(highProfileName))) {
-            log.debug("OCプロファイルを{}に変更します。", highProfileName);
-            currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), highProfileName);
+        for (int i = 0; i < RETRY_COUNT; i++) {
+            try {
+                // 発電電力 > 閾値 の場合、Power Limitを上げる
+                if (average > (threshold + hysteresis)
+                        && (currentProfileName == null || !currentProfileName.equals(highProfileName))) {
+                    log.debug("OCプロファイルを{}に変更します。", highProfileName);
+                    currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), highProfileName);
 
-            // 発電電力 < 閾値 の場合、Power Limitを下げる
-        } else if (average < (threshold - hysteresis)
-                && (currentProfileName == null || !currentProfileName.equals(lowProfileName))) {
-            log.debug("OCプロファイルを{}に変更します。", lowProfileName);
-            currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), lowProfileName);
-        } else {
-            log.trace("OCプロファイルの変更はありません。: {}", currentProfileName);
+                    // 発電電力 < 閾値 の場合、Power Limitを下げる
+                } else if (average < (threshold - hysteresis)
+                        && (currentProfileName == null || !currentProfileName.equals(lowProfileName))) {
+                    log.debug("OCプロファイルを{}に変更します。", lowProfileName);
+                    currentOcProfile = hiveService.changeWorkerOcProfile(serviceConfig.getHiveApi(), lowProfileName);
+                } else {
+                    log.trace("OCプロファイルの変更はありません。: {}", currentProfileName);
+                }
+                break;
+            } catch (Exception e) {
+                log.error("OCプロファイルの変更に失敗しました。", e);
+            }
+
+            // 送信失敗したら、しばらく待ってから再実行
+            Thread.sleep(HIVE_RETRY_INTERVAL);
         }
     }
 
@@ -203,7 +215,7 @@ public class GridTieInverterTasks {
             }
 
             // 送信失敗したら、しばらく待ってから再実行
-            Thread.sleep(RETRY_INTERVAL);
+            Thread.sleep(AMBIENT_RETRY_INTERVAL);
         }
         if (summary == null) {
             throw new IOException("Ambientからのデータ取得に失敗しました。");
@@ -222,7 +234,7 @@ public class GridTieInverterTasks {
             }
 
             // 送信失敗したら、しばらく待ってから再実行
-            Thread.sleep(RETRY_INTERVAL);
+            Thread.sleep(AMBIENT_RETRY_INTERVAL);
         }
     }
 
