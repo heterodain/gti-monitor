@@ -3,6 +3,9 @@
 グリッドタイインバーターから30秒毎に発電量を取得して、グラフ化するプログラムです。  
 (This program is get power-generation from "Grid Tie Inverver" every 30sec, and graphed)
 
+Hive-apiを利用することで、発電量に応じてグラボのPower Limitを動的制御することも可能です。  
+(By using Hive-api, it is also possible to dynamically control the "Power Limit" of the graphics board according to the amount of power generated)
+
 ![SpringBoot](https://img.shields.io/badge/SpringBoot-2.5.6-green.svg) 
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
 ![j2mod](https://img.shields.io/badge/j2mod-2.7.0-green.svg)
@@ -15,15 +18,15 @@
 
 - グリッドタイインバーター (Grid Tie Inverter)
   - SUN 1000GTIL2-LCD
-- Java 8 以降 (Java 8 or higher)
+- Java 11 以降 (Java 11 or higher)
 
 ## 使い方 (Usage)
 
-1. GTIの通信ポートと、PCまたはRaspberry PIを接続してください。  
-   (Connect GTI Serial Port to PC or Raspberry PI)
+1. GTIの通信ポートと、Hive OSを動作させているPCを接続してください。  
+   (Connect GTI Serial Port to PC running the Hive OS)
 
-2. application.yml を編集して、GTIとAmbientとOpenWeatherの接続情報を記入してください。  
-   (Edit application.yml and fills connect information of GTI and Ambient, Open Weather)
+2. application.yml を編集して、GTIとAmbientとOpenWeatherとHive-apiの接続情報を記入してください。  
+   (Edit application.yml and fills connect information of GTI, Ambient, Open Weather, and Hive-api)
 
 3. コンパイル&パッケージング (Compile & Packaging)
 
@@ -31,11 +34,11 @@
     mvn clean package
     ```
 
-4. jarとapplication.ymlファイルを同一フォルダに置いて、PCまたはRaspberry PI上で実行  
-   (Put jar and application.yml files in same folder, Execute on PC or Raspberry PI)
+4. jarとapplication.ymlファイルを同一フォルダに置いて、Hive OS上のターミナルで実行  
+   (Put jar and application.yml files in same folder, Run in a Terminal on Hive OS)
 
      ```command
-     java -jar gti-monitor-1.1.jar
+     java -jar gti-monitor-1.2.jar
      ```
 
 ## 参考情報 (Appendix)
