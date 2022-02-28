@@ -10,7 +10,7 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
 ![j2mod](https://img.shields.io/badge/j2mod-2.7.0-green.svg)
 
-<img width="1920" alt="image" src="https://user-images.githubusercontent.com/46586035/148751011-55361419-d0e6-4601-af0f-048b33df5d25.png">
+![image](https://user-images.githubusercontent.com/46586035/155965428-8beaf48a-7464-4af5-a70e-558e29317f2f.png)
 
 [![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
 
@@ -44,7 +44,7 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 ## 参考情報 (Appendix)
 
 Ambient Channel Setting  
-<img width="902" alt="setting" src="https://user-images.githubusercontent.com/46586035/153027010-a3815c3a-8857-49cd-b237-47ab3c4a214f.png">
+<img width="902" alt="setting" src="https://user-images.githubusercontent.com/46586035/155965319-bc29c2c5-9549-414f-8d2e-3be1d382f32c.png">
 
 Ambient Chart  
 <img width="693" alt="chart" src="https://user-images.githubusercontent.com/46586035/153027021-9efdf837-3679-4f77-803d-b0a60d8ff2cf.png">
