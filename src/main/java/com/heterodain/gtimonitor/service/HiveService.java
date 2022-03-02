@@ -54,6 +54,7 @@ public class HiveService {
      */
     public OcProfile changeWorkerOcProfile(HiveApi config, String ocProfileName)
             throws IOException, InterruptedException {
+
         var ocProfiles = getOcProfiles(config);
         log.debug("OC Profiles > {}", ocProfiles);
 
@@ -97,6 +98,7 @@ public class HiveService {
      * @throws InterruptedException
      */
     private Map<String, OcProfile> getOcProfiles(HiveApi config) throws IOException, InterruptedException {
+
         // HTTP GET
         var uri = String.format(GET_OC_PROFILE_URL, config.getFarmId());
         log.trace("request > [GET] {}", uri);

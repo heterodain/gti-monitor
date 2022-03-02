@@ -3,13 +3,15 @@ device:
   ## グリッドタイインバーターの接続設定
   gti:
     # シリアル通信ポート名
-    com-port: "COM3"
+    com-port: "/dev/ttyUSB0"
     # RS485のユニットID
     unit-id: 1
 
 # サービス設定
 service:
+
   ## Ambientのチャネル接続設定
+  ## Ambientを利用しない場合は、ambient以下の設定をコメントアウトしてください
   ambient:
     # チャネルID
     channel-id: 99999
@@ -17,13 +19,17 @@ service:
     read-key: "****************"
     # ライトキー
     write-key: "****************"
+
   ## Open Weather API接続設定
+  ## Open Weather APIから天気情報を取得しない場合は、open-weather-api以下の設定をコメントアウトしてください
   open-weather-api:
     # 都市ID
     city-id: 1848354
     # APIアクセスキー
     api-key: "********************************"
+
   ## Hive API接続設定
+  ## Power Limit制御をしない場合は、hive-api以下の設定をコメントアウトしてください
   hive-api:
     # ファームID
     farm-id: 9999999

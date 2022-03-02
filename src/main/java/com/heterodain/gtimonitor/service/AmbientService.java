@@ -121,6 +121,7 @@ public class AmbientService {
      * @throws InterruptedException
      */
     public List<ReadData> read(Ambient config, LocalDate date) throws IOException, InterruptedException {
+
         // HTTP GET
         var uri = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()
                 + "&date=" + date.format(DateTimeFormatter.ISO_DATE);
