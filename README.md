@@ -8,9 +8,9 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 
 ![SpringBoot](https://img.shields.io/badge/SpringBoot-2.5.6-green.svg) 
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
-![j2mod](https://img.shields.io/badge/j2mod-2.7.0-green.svg)
+![j2mod](https://img.shields.io/badge/j2mod-3.1.1-green.svg)
 
-![image](https://user-images.githubusercontent.com/46586035/155965428-8beaf48a-7464-4af5-a70e-558e29317f2f.png)
+![image](https://user-images.githubusercontent.com/46586035/156317579-0bb5976a-792b-4e4e-864c-3257308575a9.png)
 
 [![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
 
