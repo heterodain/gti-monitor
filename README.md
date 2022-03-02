@@ -10,7 +10,7 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
 ![j2mod](https://img.shields.io/badge/j2mod-3.1.1-green.svg)
 
-![image](https://user-images.githubusercontent.com/46586035/156317579-0bb5976a-792b-4e4e-864c-3257308575a9.png)
+![image](https://user-images.githubusercontent.com/46586035/156319330-8c099f52-ccd8-435d-bcae-aed07b43d51e.png)
 
 [![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
 
