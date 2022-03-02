@@ -31,14 +31,14 @@ public class GridTieInverterDevice {
 	 * @param gti GTI情報
 	 * @throws IOException
 	 */
-	public void connect(Gti info) throws IOException {
-		synchronized (info.getComPort()) {
+	public void connect(Gti config) throws IOException {
+		synchronized (connections) {
 			// 接続
-			if (!connections.containsKey(info.getComPort())) {
-				log.info("GTIに接続します: {}", info);
+			if (!connections.containsKey(config.getComPort())) {
+				log.info("GTIに接続します: {}", config);
 
 				var params = new SerialParameters();
-				params.setPortName(info.getComPort());
+				params.setPortName(config.getComPort());
 				params.setBaudRate(9600);
 				params.setDatabits(8);
 				params.setParity("None");
@@ -48,7 +48,7 @@ public class GridTieInverterDevice {
 
 				var connection = new SerialConnection(params);
 				connection.open();
-				connections.put(info.getComPort(), connection);
+				connections.put(config.getComPort(), connection);
 			}
 		}
 	}
@@ -61,17 +61,17 @@ public class GridTieInverterDevice {
 	 * @throws IOException
 	 * @throws ModbusException
 	 */
-	public Double getCurrentPower(Gti info) throws IOException, ModbusException {
+	public Double getCurrentPower(Gti config) throws IOException, ModbusException {
 		// 接続取得
-		var connection = connections.get(info.getComPort());
+		var connection = connections.get(config.getComPort());
 		if (connection == null) {
-			throw new IOException("GTIに接続されていません。" + info);
+			throw new IOException("GTIに接続されていません。" + config);
 		}
 
 		// 読み込み
 		synchronized (connection) {
 			var req = new ReadMultipleRegistersRequest(86, 1);
-			req.setUnitID(info.getUnitId());
+			req.setUnitID(config.getUnitId());
 			var tr = new ModbusSerialTransaction(connection);
 			tr.setRequest(req);
 			tr.execute();
