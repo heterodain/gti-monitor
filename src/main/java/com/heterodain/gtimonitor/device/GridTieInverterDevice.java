@@ -28,7 +28,7 @@ public class GridTieInverterDevice {
 	/**
 	 * GTI接続
 	 * 
-	 * @param gti GTI情報
+	 * @param config GTI情報
 	 * @throws IOException
 	 */
 	public void connect(Gti config) throws IOException {
@@ -56,7 +56,7 @@ public class GridTieInverterDevice {
 	/**
 	 * 現在の発電電力取得
 	 * 
-	 * @param gti GTI情報
+	 * @param config GTI情報
 	 * @return 発電電力(W)
 	 * @throws IOException
 	 * @throws ModbusException
