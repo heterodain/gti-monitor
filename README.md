@@ -12,7 +12,13 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 
 ![image](https://user-images.githubusercontent.com/46586035/156319330-8c099f52-ccd8-435d-bcae-aed07b43d51e.png)
 
-[![Video1](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
+[![Video1](https://img.youtube.com/vi/aoAeCjsPBZ8/0.jpg)](https://www.youtube.com/watch?v=aoAeCjsPBZ8)
+
+[![Video2](https://img.youtube.com/vi/dU6PKDX_2wg/0.jpg)](https://www.youtube.com/watch?v=dU6PKDX_2wg) (use v1.0)
+
+[![Video3](https://img.youtube.com/vi/-XozmxAGuGM/0.jpg)](https://www.youtube.com/watch?v=-XozmxAGuGM)
+
+[![Video4](https://img.youtube.com/vi/t2q48zudbes/0.jpg)](https://www.youtube.com/watch?v=t2q48zudbes) (use v1.2)
 
 ## 必要要件 (Requirement)
 
