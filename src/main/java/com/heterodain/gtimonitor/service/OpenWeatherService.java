@@ -25,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 public class OpenWeatherService {
     /** 天気情報APIのURL */
     private static final String CURRENT_WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather?id=%s&mode=json&lang=ja&units=metric&appid=%s";
-    /** HTTP読み込みタイムアウト(ミリ秒) */
-    private static final int READ_TIMEOUT = 10 * 1000; // 10秒
+    /** HTTP読み込みタイムアウト(秒) */
+    private static final int READ_TIMEOUT = 10;
 
     /** Httpクライアント */
     @Autowired
@@ -62,6 +62,7 @@ public class OpenWeatherService {
         }
         log.trace("response > {}", json);
 
+        // レスポンスのJSONから、天気情報を抽出
         var result = new CurrentWeather();
         result.setWeather(json.at("/weather/0/description").textValue());
         result.setTemperature(json.at("/main/temp").doubleValue());
