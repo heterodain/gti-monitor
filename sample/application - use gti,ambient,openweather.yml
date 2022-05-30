@@ -1,0 +1,72 @@
+# タスクスケジューラのスレッドプールサイズ
+spring.task.scheduling.pool.size: 3
+
+# デバイス設定
+device:
+  ## グリッドタイインバーターの接続設定
+ gti:
+   # シリアル通信ポート名
+   com-port: "ttyUSB0"
+   # RS485のユニットID
+   unit-id: 1
+
+# サービス設定
+service:
+  ## Ambientのチャネル接続設定
+  ambient:
+    # 現在値用チャネル
+    current:
+      ## チャネルID
+      channel-id: 99999
+      ## リードキー
+      read-key: "****************"
+      ## ライトキー
+      write-key: "****************"
+
+    # 集計値用チャネル
+    summary:
+      ## チャネルID
+      channel-id: 99999
+      ## リードキー
+      read-key: "****************"
+      ## ライトキー
+      write-key: "****************"
+
+  ## Hive API接続設定
+  hive-api:
+    # ファームID
+    farm-id: 9999999
+    # ワーカーID
+    worker-id: 99999999
+    # パーソナルトークン
+    personal-token: "*****************************************************************************************"
+
+  ## Open Weather API接続設定
+  open-weather-api:
+    # 都市ID
+    city-id: 1848354
+    # APIアクセスキー
+    api-key: "********************************"
+
+# 費用設定
+cost:
+  ## kWh当たりの電気代(円)
+  kwh: 33
+
+# 制御設定
+control:
+  ## 電力制御設定
+  power:
+    # 高電力設定OCプロファイル名
+    high-profile-name: "HIGH"
+    # 低電力設定OCプロファイル名
+    low-profile-name: "LOW"
+    # 電力制御に利用するデバイス("GTI" or "LIGHT_SENSOR")
+    source: "GTI"
+    # OCプロファイル切り替え閾値(W or LUX)
+    threshold: 110
+    # 調整感度(W or LUX) ※値を大きくするほど細かな値の変化に影響されにくくなる(15W or 300LUXくらいが目安)
+    hysteresis: 15
+
+# ログレベル
+#詳細なログを出力する場合にコメントを外す# logging.level.com.heterodain.gtimonitor: TRACE
