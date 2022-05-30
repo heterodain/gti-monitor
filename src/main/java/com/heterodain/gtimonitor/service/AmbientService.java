@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.heterodain.gtimonitor.config.ServiceConfig.Ambient;
+import com.heterodain.gtimonitor.config.ServiceConfig.AmbientApi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,7 @@ public class AmbientService {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void send(Ambient config, ZonedDateTime ts, String comment, Double... datas)
+    public void send(AmbientApi config, ZonedDateTime ts, String comment, Double... datas)
             throws IOException, InterruptedException {
 
         synchronized (config) {
@@ -120,7 +120,7 @@ public class AmbientService {
      * @throws IOException
      * @throws InterruptedException
      */
-    public List<ReadData> read(Ambient config, LocalDate date) throws IOException, InterruptedException {
+    public List<ReadData> read(AmbientApi config, LocalDate date) throws IOException, InterruptedException {
 
         // HTTP GET
         var uri = "http://ambidata.io/api/v2/channels/" + config.getChannelId() + "/data?readKey=" + config.getReadKey()

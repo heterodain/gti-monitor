@@ -24,9 +24,18 @@ public class ControlConfig {
         private String highProfileName;
         /** 低電力設定プロファイル名 */
         private String lowProfileName;
+        /** 電力制御に利用するデバイス */
+        private Source source;
         /** Power Limit切り替え閾値(W) */
         private Integer threshold;
         /** 調整感度(W) */
         private Integer hysteresis;
+
+        /**
+         * 電力制御デバイス
+         */
+        public static enum Source {
+            LIGHT_SENSOR, GTI;
+        }
     }
 }

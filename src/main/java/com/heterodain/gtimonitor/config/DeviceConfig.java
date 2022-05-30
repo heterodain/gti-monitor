@@ -12,8 +12,19 @@ import lombok.Data;
 @ConfigurationProperties("device")
 @Data
 public class DeviceConfig {
+    /* 照度センサーの設定 */
+    private LightSensor lightSensor;
     /* GTIの設定 */
     private Gti gti;
+
+    /**
+     * 照度センサーの設定情報
+     */
+    @Data
+    public static class LightSensor {
+        /* シリアル通信ポート名 */
+        private String comPort;
+    }
 
     /**
      * GTIの設定情報

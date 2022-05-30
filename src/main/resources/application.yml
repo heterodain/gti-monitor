@@ -1,34 +1,50 @@
+# タスクスケジューラのスレッドプールサイズ
+spring.task.scheduling.pool.size: 3
+
 # デバイス設定
-device:
-  ## グリッドタイインバーターの接続設定
-  gti:
-    # シリアル通信ポート名
-    com-port: "/dev/ttyUSB0"
-    # RS485のユニットID
-    unit-id: 1
+#device:
+#  ## 照度センサーの接続設定
+#  light-sensor:
+#    # シリアル通信ポート名
+#    com-port: "ttyUSB0"
+#
+#  ## グリッドタイインバーターの接続設定
+#  gti:
+#    # シリアル通信ポート名
+#    com-port: "ttyUSB1"
+#    # RS485のユニットID
+#    unit-id: 1
 
 # サービス設定
-service:
-  ## Ambientのチャネル接続設定
-  ## Ambientを利用する場合は、ambient以下のコメントアウトを外してください
+#service:
+#  ## Ambientのチャネル接続設定
 #  ambient:
-#    # チャネルID
-#    channel-id: 99999
-#    # リードキー
-#    read-key: "****************"
-#    # ライトキー
-#    write-key: "****************"
-
-  ## Open Weather API接続設定
-  ## Open Weather APIから天気情報を取得する場合は、open-weather-api以下のコメントアウトを外してください
+#    # 現在値用チャネル
+#    current:
+#      ## チャネルID
+#      channel-id: 99999
+#      ## リードキー
+#      read-key: "****************"
+#      ## ライトキー
+#      write-key: "****************"
+#
+#    # 集計値用チャネル
+#    summary:
+#      ## チャネルID
+#      channel-id: 99999
+#      ## リードキー
+#      read-key: "****************"
+#      ## ライトキー
+#      write-key: "****************"
+#
+#  ## Open Weather API接続設定
 #  open-weather-api:
 #    # 都市ID
 #    city-id: 1848354
 #    # APIアクセスキー
 #    api-key: "********************************"
-
-  ## Hive API接続設定
-  ## Power Limit制御をする場合は、hive-api以下のコメントアウトを外してください
+#
+#  ## Hive API接続設定
 #  hive-api:
 #    # ファームID
 #    farm-id: 9999999
@@ -40,7 +56,7 @@ service:
 # 費用設定
 cost:
   ## kWh当たりの電気代(円)
-  kwh: 30
+  kwh: 33
 
 # 制御設定
 control:
@@ -50,9 +66,11 @@ control:
     high-profile-name: "HIGH"
     # 低電力設定OCプロファイル名
     low-profile-name: "LOW"
-    # OCプロファイル切り替え閾値(W)
+    # 電力制御に利用するデバイス("GTI" or "LIGHT_SENSOR")
+    source: "GTI"
+    # OCプロファイル切り替え閾値(W or LUX)
     threshold: 110
-    # 調整感度(W) ※値を大きくするほど細かな発電量の変化に影響されにくくなる(15くらいが目安)
+    # 調整感度(W or LUX) ※値を大きくするほど細かな値の変化に影響されにくくなる(15W or 300LUXくらいが目安)
     hysteresis: 15
 
 # ログレベル

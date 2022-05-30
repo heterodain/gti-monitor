@@ -1,5 +1,6 @@
 package com.heterodain.gtimonitor.device;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,9 +22,12 @@ import com.heterodain.gtimonitor.config.DeviceConfig.Gti;
  */
 @Component
 @Slf4j
-public class GridTieInverterDevice {
+public class GridTieInverterDevice implements Closeable {
+
 	/** GTIへのシリアル接続 */
-	private Map<String, SerialConnection> connections = new ConcurrentHashMap<>();
+	private SerialConnection connection;
+	/** RS485のユニットID */
+	private Integer unitId;
 
 	/**
 	 * GTI接続
@@ -32,25 +36,22 @@ public class GridTieInverterDevice {
 	 * @throws IOException
 	 */
 	public void connect(Gti config) throws IOException {
-		synchronized (connections) {
-			// 接続
-			if (!connections.containsKey(config.getComPort())) {
-				log.info("GTIに接続します: {}", config);
+		// 接続
+		log.info("GTIに接続します: {}", config);
 
-				var params = new SerialParameters();
-				params.setPortName(config.getComPort());
-				params.setBaudRate(9600);
-				params.setDatabits(8);
-				params.setParity("None");
-				params.setStopbits(1);
-				params.setEncoding("rtu");
-				params.setEcho(false);
+		var params = new SerialParameters();
+		params.setPortName(config.getComPort());
+		params.setBaudRate(9600);
+		params.setDatabits(8);
+		params.setParity("None");
+		params.setStopbits(1);
+		params.setEncoding("rtu");
+		params.setEcho(false);
 
-				var connection = new SerialConnection(params);
-				connection.open();
-				connections.put(config.getComPort(), connection);
-			}
-		}
+		var connection = new SerialConnection(params);
+		connection.open();
+
+		unitId = config.getUnitId();
 	}
 
 	/**
@@ -61,17 +62,11 @@ public class GridTieInverterDevice {
 	 * @throws IOException
 	 * @throws ModbusException
 	 */
-	public Double getCurrentPower(Gti config) throws IOException, ModbusException {
-		// 接続取得
-		var connection = connections.get(config.getComPort());
-		if (connection == null) {
-			throw new IOException("GTIに接続されていません。" + config);
-		}
-
+	public Double getCurrentPower() throws IOException, ModbusException {
 		// 読み込み
 		synchronized (connection) {
 			var req = new ReadMultipleRegistersRequest(86, 1);
-			req.setUnitID(config.getUnitId());
+			req.setUnitID(unitId);
 			var tr = new ModbusSerialTransaction(connection);
 			tr.setRequest(req);
 			tr.execute();
@@ -81,12 +76,10 @@ public class GridTieInverterDevice {
 		}
 	}
 
-	/**
-	 * GTI接続解除
-	 */
-	public void disconnectAll() {
-		connections.values().forEach(connection -> {
+	@Override
+	public void close() throws IOException {
+		if (connection != null && connection.isOpen()) {
 			connection.close();
-		});
+		}
 	}
 }

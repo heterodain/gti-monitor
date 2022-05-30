@@ -12,18 +12,29 @@ import lombok.Data;
 @ConfigurationProperties("service")
 @Data
 public class ServiceConfig {
-    /** Ambientの設定 */
-    private Ambient ambient;
+    /** Ambientのチャネル設定 */
+    private AmbientChannel ambient;
     /** Open Weather APIの設定 */
     private OpenWeatherApi openWeatherApi;
     /** Hive APIの設定 */
     private HiveApi hiveApi;
 
     /**
-     * Ambientの設定情報
+     * Ambientのチャネル設定情報
      */
     @Data
-    public static class Ambient {
+    public static class AmbientChannel {
+        /** 現在値 */
+        private AmbientApi current;
+        /** 集計値 */
+        private AmbientApi summary;
+    }
+
+    /**
+     * AmbientのAPI設定情報
+     */
+    @Data
+    public static class AmbientApi {
         /** チャネルID */
         private Integer channelId;
         /** リードキー */
