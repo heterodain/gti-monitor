@@ -2,8 +2,6 @@ package com.heterodain.gtimonitor.device;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
@@ -63,17 +61,14 @@ public class GridTieInverterDevice implements Closeable {
 	 * @throws ModbusException
 	 */
 	public Double getCurrentPower() throws IOException, ModbusException {
-		// 読み込み
-		synchronized (connection) {
-			var req = new ReadMultipleRegistersRequest(86, 1);
-			req.setUnitID(unitId);
-			var tr = new ModbusSerialTransaction(connection);
-			tr.setRequest(req);
-			tr.execute();
+		var req = new ReadMultipleRegistersRequest(86, 1);
+		req.setUnitID(unitId);
+		var tr = new ModbusSerialTransaction(connection);
+		tr.setRequest(req);
+		tr.execute();
 
-			var res = (ReadMultipleRegistersResponse) tr.getResponse();
-			return ((double) res.getRegisterValue(0)) / 10D;
-		}
+		var res = (ReadMultipleRegistersResponse) tr.getResponse();
+		return ((double) res.getRegisterValue(0)) / 10D;
 	}
 
 	@Override
