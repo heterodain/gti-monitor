@@ -108,7 +108,7 @@ public class GridTieInverterTasks {
 
         try {
             var current = lightSensorDevice.readLux();
-            log.debug("current={} LUX", current);
+            log.debug("current={} lx", current);
             synchronized (lightDatas) {
                 lightDatas.add(current);
             }
@@ -246,13 +246,13 @@ public class GridTieInverterTasks {
 
         for (int i = 0; i < RETRY_COUNT; i++) {
             try {
-                // 発電電力 > 閾値 の場合、Power Limitを上げる
+                // (発電電力 or 照度) > 閾値 の場合、Power Limitを上げる
                 if (average > (threshold + hysteresis)
                         && (currentProfileName == null || !currentProfileName.equals(highProfileName))) {
                     log.debug("OCプロファイルを{}に変更します。", highProfileName);
                     currentOcProfile = hiveService.changeWorkerOcProfile(hiveApiConfig, highProfileName);
 
-                    // 発電電力 < 閾値 の場合、Power Limitを下げる
+                    // (発電電力 or 照度) < 閾値 の場合、Power Limitを下げる
                 } else if (average < (threshold - hysteresis)
                         && (currentProfileName == null || !currentProfileName.equals(lowProfileName))) {
                     log.debug("OCプロファイルを{}に変更します。", lowProfileName);

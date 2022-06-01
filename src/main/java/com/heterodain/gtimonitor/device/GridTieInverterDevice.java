@@ -55,7 +55,6 @@ public class GridTieInverterDevice implements Closeable {
 	/**
 	 * 現在の発電電力取得
 	 * 
-	 * @param config GTI情報
 	 * @return 発電電力(W)
 	 * @throws IOException
 	 * @throws ModbusException
