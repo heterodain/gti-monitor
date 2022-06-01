@@ -6,7 +6,7 @@
 Hive-apiを利用することで、発電量に応じてグラボのPower Limitを動的制御することも可能です。  
 (By using Hive-api, it is also possible to dynamically control the "Power Limit" of the graphics board according to the amount of power generated)
 
-![SpringBoot](https://img.shields.io/badge/SpringBoot-2.5.6-green.svg) 
+![SpringBoot](https://img.shields.io/badge/SpringBoot-2.7.0-green.svg) 
 ![Lombok](https://img.shields.io/badge/Lombok-1.18.20-green.svg) 
 ![j2mod](https://img.shields.io/badge/j2mod-3.1.1-green.svg)
 
