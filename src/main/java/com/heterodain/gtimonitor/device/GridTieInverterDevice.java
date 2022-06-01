@@ -46,7 +46,7 @@ public class GridTieInverterDevice implements Closeable {
 		params.setEncoding("rtu");
 		params.setEcho(false);
 
-		var connection = new SerialConnection(params);
+		connection = new SerialConnection(params);
 		connection.open();
 
 		unitId = config.getUnitId();
