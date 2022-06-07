@@ -7,6 +7,10 @@ import lombok.Data;
  */
 @Data
 public class MeasureData {
+    /** 照度(Lux) */
     private Double light;
+    /** 電力(Wh) */
     private Double power;
+    /** ハッシュレート(MH/s) */
+    private Double hash;
 }
