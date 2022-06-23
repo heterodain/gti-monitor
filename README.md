@@ -24,6 +24,8 @@ Hive-apiを利用することで、発電量に応じてグラボのPower Limit�
 
 [![Video6](https://img.youtube.com/vi/P8n4UprHtAU/0.jpg)](https://www.youtube.com/watch?v=P8n4UprHtAU)
 
+[![Video7](https://img.youtube.com/vi/x6gJxqRZLT8/0.jpg)](https://www.youtube.com/watch?v=x6gJxqRZLT8) (use v1.3)
+
 ## 必要要件 (Requirement)
 
 - USB照度センサーまたはグリッドタイインバーター (USB light sensor or Grid tie inverter)
